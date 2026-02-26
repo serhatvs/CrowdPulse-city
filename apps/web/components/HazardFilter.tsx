@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef } from "react";
 
 const categories = [
   { value: 1, label: "Kaldırım yüksekliği" },
@@ -15,24 +15,37 @@ export default function HazardFilter({ onFilter }) {
   const [timeWindow, setTimeWindow] = useState(24); // saat
 
 
-  function handleFilter() {
-    if (minRisk > maxRisk) {
-      alert('Minimum risk maksimumdan büyük olamaz.');
-      return;
-    }
-    onFilter({
-      category: selectedCategory,
-      minRisk,
-      maxRisk,
-      timeWindow
-    });
-  }
 
-  // Otomatik filtre tetikleme (debounced değil, anında)
+  // Debounce fonksiyonu
+  const debounce = (fn, delay) => {
+    const timer = useRef();
+    return (...args) => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => fn(...args), delay);
+    };
+  };
+
+  const handleFilter = useCallback(
+    debounce(() => {
+      if (minRisk > maxRisk) {
+        alert('Minimum risk maksimumdan büyük olamaz.');
+        return;
+      }
+      onFilter({
+        category: selectedCategory,
+        minRisk,
+        maxRisk,
+        timeWindow
+      });
+    }, 300),
+    [selectedCategory, minRisk, maxRisk, timeWindow, onFilter]
+  );
+
+  // Otomatik filtre tetikleme (debounced)
   React.useEffect(() => {
     handleFilter();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, minRisk, maxRisk, timeWindow]);
+  }, [handleFilter]);
 
   return (
     <div style={{ padding: 8, background: "#f5f5f5", borderRadius: 8 }}>

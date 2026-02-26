@@ -1,23 +1,27 @@
+
+import { Pool } from 'pg';
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@db:5432/postgres',
+  max: 10,
+});
+
 export async function findRecentDuplicate(
   lat: number, lon: number, type: string
 ): Promise<boolean> {
-  const minLatE6 = Math.floor((lat - 0.0001) * 1e6);
-  const maxLatE6 = Math.ceil((lat + 0.0001) * 1e6);
-  const minLonE6 = Math.floor((lon - 0.0001) * 1e6);
-  const maxLonE6 = Math.ceil((lon + 0.0001) * 1e6);
+  // E6 formatında 10m yarıçaplı bir kutu (daha dar arama)
+  const latE6 = Math.round(lat * 1e6);
+  const lonE6 = Math.round(lon * 1e6);
   const { rows } = await pool.query(
     `SELECT 1 FROM hazards
-     WHERE latE6 BETWEEN $1 AND $2
-     AND lonE6 BETWEEN $3 AND $4
-     AND type = $5
+     WHERE ABS(latE6 - $1) <= 10000
+     AND ABS(lonE6 - $2) <= 10000
+     AND type = $3
      AND created_at > NOW() - INTERVAL '1 hour'
      LIMIT 1`,
-    [minLatE6, maxLatE6, minLonE6, maxLonE6, type]
+    [latE6, lonE6, type]
   );
   return rows.length > 0;
 }
-
-import { Pool } from 'pg';
 
 export type HazardRecord = {
   id: number;

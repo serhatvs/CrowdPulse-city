@@ -18,7 +18,6 @@ function gridCell(latE6, lonE6) {
  * @returns {Object} heatmap - { "lat_lon": { avgRisk, count } }
  */
 export function aggregateHeatmap(hazards) {
-  export { aggregateHeatmap as getHeatmapData };
   const grid = {};
   for (const h of hazards) {
     const cell = gridCell(h.latE6, h.lonE6);
@@ -37,6 +36,8 @@ export function aggregateHeatmap(hazards) {
   // Ortalama risk hesapla
   const heatmap = {};
   for (const key in grid) {
+    // Alias export fonksiyon dışında
+    export { aggregateHeatmap as getHeatmapData };
     heatmap[key] = {
       avgRisk: Math.round(grid[key].totalRisk / grid[key].count),
       count: grid[key].count

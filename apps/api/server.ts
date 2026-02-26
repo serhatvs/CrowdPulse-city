@@ -42,14 +42,15 @@ function walletAuth(req, res, next) {
     return res.status(401).json({ error: "Valid wallet address required in x-wallet-address header" });
   }
   req.walletAddress = address.toLowerCase();
-  // Rate limit
+  // Rate limit (her adres için ayrı sayaç, window reset)
   const now = Math.floor(Date.now() / 1000);
-  const rl = rateLimitMap.get(req.walletAddress) || { count: 0, last: now };
-  if (now - rl.last > RATE_LIMIT_WINDOW) {
-    rl.count = 0;
-    rl.last = now;
+  let rl = rateLimitMap.get(req.walletAddress);
+  if (!rl || now - rl.last > RATE_LIMIT_WINDOW) {
+    rl = { count: 1, last: now };
+  } else {
+    rl.count++;
   }
-  rl.count++;
+  rl.last = now;
   if (rl.count > RATE_LIMIT_MAX) {
     return res.status(429).json({ error: "Rate limit exceeded" });
   }
@@ -58,7 +59,7 @@ function walletAuth(req, res, next) {
 }
 import express from "express";
 import { aggregateHeatmap } from "../../packages/indexer/heatmapAggregate";
-import { createHazard, getHazardsInBbox, voteHazard } from "./db";
+// ...
 import { reportHazardOnChain, voteHazardOnChain } from "./blockchain";
 
 const app = express();

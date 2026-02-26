@@ -9,8 +9,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const raw = String(req.query.bbox ?? "");
   const bbox = raw.split(",").map(Number);
-  if (bbox.length !== 4 || bbox.some(Number.isNaN)) {
-    return res.status(400).json({ error: "Invalid bbox. Expected minLat,minLon,maxLat,maxLon" });
+  if (
+    bbox.length !== 4 ||
+    bbox.some(Number.isNaN) ||
+    bbox[0] >= bbox[2] || bbox[1] >= bbox[3] ||
+    Math.abs(bbox[2] - bbox[0]) > 2 || Math.abs(bbox[3] - bbox[1]) > 2
+  ) {
+    return res.status(400).json({ error: "Invalid bbox. Expected minLat,minLon,maxLat,maxLon and area < 2x2" });
   }
   const [minLat, minLon, maxLat, maxLon] = bbox;
   try {

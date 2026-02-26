@@ -1,6 +1,4 @@
 import { ethers } from "ethers";
-import dotenv from "dotenv";
-dotenv.config();
 
 const abi = [
   "event HazardReported(uint256 indexed hazardId, int32 latE6, int32 lonE6, uint8 category, uint8 severity, address reporter, string noteURI)",
@@ -11,9 +9,6 @@ const abi = [
 ];
 
 
-if (process.env.NODE_ENV === 'production' && !process.env.USE_KMS) {
-  throw new Error('Use KMS in production!');
-}
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
 const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS!, abi, signer);

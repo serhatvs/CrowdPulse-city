@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 
 Modal.setAppElement("#root"); // Next.js'de _app.js'de root id olmalı
@@ -9,6 +9,17 @@ export default function HazardReportModal({ isOpen, onClose, onSubmit, initialLa
   const [category, setCategory] = useState(1);
   const [severity, setSeverity] = useState(3);
   const [noteURI, setNoteURI] = useState("");
+
+  // Modal kapandığında state'leri resetle
+  useEffect(() => {
+    if (!isOpen) {
+      setLat(initialLat);
+      setLon(initialLon);
+      setCategory(1);
+      setSeverity(3);
+      setNoteURI("");
+    }
+  }, [isOpen, initialLat, initialLon]);
 
   function handleSubmit(e) {
     e.preventDefault();

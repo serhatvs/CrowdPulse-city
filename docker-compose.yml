@@ -10,6 +10,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 10s
 
   hardhat:
     image: node:20-alpine
@@ -19,6 +25,12 @@ services:
       - ./:/app
     ports:
       - "8545:8545"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8545"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 10s
 
   api:
     image: node:20-alpine
@@ -38,6 +50,8 @@ services:
       PRIVATE_KEY: ${PRIVATE_KEY}
     depends_on:
       postgres:
+        condition: service_healthy
+      hardhat:
         condition: service_healthy
     volumes:
       - ./:/app

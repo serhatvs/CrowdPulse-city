@@ -9,12 +9,25 @@
  */
 import { MinPriorityQueue } from '@datastructures-js/priority-queue';
 
-export function astarPath(grid, start, end, options = {}) {
+
+  // Guard: grid boş veya satır yoksa
+  if (!Array.isArray(grid) || grid.length === 0 || !Array.isArray(grid[0]) || grid[0].length === 0) {
+    return [];
+  }
+
   const riskThreshold = options.riskThreshold ?? 50;
   const wheelchairMode = options.wheelchairMode ?? false;
 
   const rows = grid.length;
   const cols = grid[0].length;
+
+  // Guard: start/end out-of-bounds
+  if (
+    start.x < 0 || start.x >= cols || start.y < 0 || start.y >= rows ||
+    end.x < 0 || end.x >= cols || end.y < 0 || end.y >= rows
+  ) {
+    return [];
+  }
 
   function heuristic(a, b) {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
