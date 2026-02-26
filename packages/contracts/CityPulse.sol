@@ -64,6 +64,7 @@ contract CityPulse {
         require(hazardId < hazards.length, "id");
         Hazard storage h = hazards[hazardId];
         require(!h.closed, "cls");
+        require(h.reporter == msg.sender, "not reporter");
         require(uint16(h.upvotes) + uint16(h.downvotes) >= 10, "th");
         h.closed = true;
         emit HazardClosed(hazardId);

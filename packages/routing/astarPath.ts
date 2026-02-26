@@ -7,6 +7,8 @@
  * @param {Object} options - { riskThreshold, wheelchairMode }
  * @returns {Array} path - [{ x, y }]
  */
+import { MinPriorityQueue } from '@datastructures-js/priority-queue';
+
 export function astarPath(grid, start, end, options = {}) {
   const riskThreshold = options.riskThreshold ?? 50;
   const wheelchairMode = options.wheelchairMode ?? false;
@@ -31,7 +33,6 @@ export function astarPath(grid, start, end, options = {}) {
     return neighbors;
   }
 
-  // Wheelchair weighting
   function cellCost(cell) {
     let cost = 1;
     if (cell.risk > riskThreshold) cost += 100;
@@ -39,17 +40,17 @@ export function astarPath(grid, start, end, options = {}) {
       if (cell.hasRamp) cost -= 0.5;
       if (cell.hasStairs) cost += 10;
     }
-    return cost + cell.risk / 20;
+    cost += cell.risk / 20;
+    return Math.max(0.1, cost);
   }
 
-  const openSet = [ { ...start, g: 0, f: heuristic(start, end), parent: null } ];
+  const openSet = new MinPriorityQueue(node => node.f);
+  openSet.enqueue({ ...start, g: 0, f: heuristic(start, end), parent: null });
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
 
-  while (openSet.length) {
-    openSet.sort((a, b) => a.f - b.f);
-    const current = openSet.shift();
+  while (!openSet.isEmpty()) {
+    const current = openSet.dequeue().element;
     if (current.x === end.x && current.y === end.y) {
-      // Path found
       const path = [];
       let node = current;
       while (node) {
@@ -65,10 +66,9 @@ export function astarPath(grid, start, end, options = {}) {
       const cost = cellCost(cell);
       const g = current.g + cost;
       const f = g + heuristic(neighbor, end);
-      openSet.push({ ...neighbor, g, f, parent: current });
+      openSet.enqueue({ ...neighbor, g, f, parent: current });
     }
   }
-  // No path found
   return [];
 }
 

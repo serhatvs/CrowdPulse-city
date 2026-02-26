@@ -9,11 +9,13 @@ async function duplicateHazardCheck(req, res, next) {
     minLat: lat - 0.0001,
     minLon: lon - 0.0001,
     maxLat: lat + 0.0001,
-    maxLon: lon + 0.0001
+    maxLon: lon + 0.0001,
+    type,
+    withinLastHour: true
   });
   const recent = hazards.find(h => h.type === type);
   if (recent) {
-    return res.status(409).json({ error: "Duplicate hazard detected" });
+    return res.status(409).json({ error: "Duplicate hazard detected (last 1 hour)" });
   }
   next();
 }
@@ -32,9 +34,14 @@ function bboxLimitCheck(req, res, next) {
   next();
 }
 // Basit wallet address auth ve rate limit middleware
-const rateLimitMap = new Map<string, { count: number; last: number }>();
+
+import LRU from 'lru-cache';
 const RATE_LIMIT_WINDOW = 60; // saniye
 const RATE_LIMIT_MAX = 10; // 1 dakikada 10 istek
+const rateLimitMap = new LRU<string, { count: number; last: number }>({
+  max: 10000,
+  ttl: RATE_LIMIT_WINDOW * 1000,
+});
 
 function walletAuth(req, res, next) {
   const address = req.headers["x-wallet-address"];
@@ -85,10 +92,15 @@ app.post("/api/hazards", walletAuth, duplicateHazardCheck, async (req, res) => {
   }
   try {
     // Zincire yaz
+    let chainId = null;
     if (category !== undefined && severity !== undefined && noteURI !== undefined) {
-      await reportHazardOnChain(Math.round(lat * 1e6), Math.round(lon * 1e6), category, severity, noteURI);
+      const receipt = await reportHazardOnChain(Math.round(lat * 1e6), Math.round(lon * 1e6), category, severity, noteURI);
+      chainId = receipt?.logs?.[0]?.args?.hazardId ?? null;
     }
-    const hazard = await createHazard({ lat, lon, type, description, created_by });
+    const hazard = await createHazard({ lat, lon, type, description, created_by, category, severity });
+    if (chainId && hazard?.id) {
+      await require('./db').pool.query('UPDATE hazards SET chain_hazard_id=$1 WHERE id=$2', [chainId, hazard.id]);
+    }
     await logEvent("hazard_created", { hazard, wallet: req.walletAddress });
     return res.status(201).json(hazard);
   } catch (e) {

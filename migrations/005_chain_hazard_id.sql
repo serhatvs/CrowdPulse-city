@@ -1,0 +1,1 @@
+ALTER TABLE hazards ADD COLUMN IF NOT EXISTS chain_hazard_id BIGINT;

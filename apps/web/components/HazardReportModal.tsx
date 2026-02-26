@@ -3,15 +3,19 @@ import Modal from "react-modal";
 
 Modal.setAppElement("#root"); // Next.js'de _app.js'de root id olmalı
 
-export default function HazardReportModal({ isOpen, onClose, onSubmit }) {
-  const [lat, setLat] = useState(0);
-  const [lon, setLon] = useState(0);
+export default function HazardReportModal({ isOpen, onClose, onSubmit, initialLat = null, initialLon = null }) {
+  const [lat, setLat] = useState(initialLat);
+  const [lon, setLon] = useState(initialLon);
   const [category, setCategory] = useState(1);
   const [severity, setSeverity] = useState(3);
   const [noteURI, setNoteURI] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (lat == null || lon == null) {
+      alert('Lütfen koordinat seçiniz.');
+      return;
+    }
     onSubmit({ lat, lon, category, severity, noteURI });
     onClose();
   }

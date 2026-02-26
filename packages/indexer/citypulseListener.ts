@@ -11,38 +11,34 @@ const abi = [
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, provider);
 
-// Event listener
+
+import { createHazard, pool } from "../../apps/api/db";
+
 function listenCityPulseEvents() {
-  contract.on("HazardReported", (hazardId, latE6, lonE6, category, severity, reporter, noteURI, event) => {
-    console.log("HazardReported", {
-      hazardId,
-      latE6,
-      lonE6,
-      category,
-      severity,
-      reporter,
-      noteURI,
-      blockNumber: event.blockNumber
-    });
-    // Burada DB'ye kaydedebilir veya indexleyebilirsiniz
+  contract.on("HazardReported", async (hazardId, latE6, lonE6, category, severity, reporter, noteURI, event) => {
+    try {
+      await createHazard({
+        lat: Number(latE6) / 1e6,
+        lon: Number(lonE6) / 1e6,
+        type: String(category),
+        created_by: reporter,
+        category: Number(category),
+        severity: Number(severity)
+      });
+    } catch (e) {
+      console.error("DB insert error (HazardReported)", e);
+    }
   });
 
-  contract.on("HazardVoted", (hazardId, voter, up, event) => {
-    console.log("HazardVoted", {
-      hazardId,
-      voter,
-      up,
-      blockNumber: event.blockNumber
-    });
-    // Burada DB güncelleyebilirsiniz
-  });
-
-  contract.on("HazardClosed", (hazardId, event) => {
-    console.log("HazardClosed", {
-      hazardId,
-      blockNumber: event.blockNumber
-    });
-    // Burada DB'de hazard'ı kapatabilirsiniz
+  contract.on("HazardClosed", async (hazardId, event) => {
+    try {
+      await pool.query(
+        'UPDATE hazards SET closed=true WHERE chain_hazard_id=$1',
+        [Number(hazardId)]
+      );
+    } catch (e) {
+      console.error("DB update error (HazardClosed)", e);
+    }
   });
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE votes ADD CONSTRAINT uq_vote UNIQUE (hazard_id, voter);

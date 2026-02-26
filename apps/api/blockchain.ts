@@ -10,6 +10,10 @@ const abi = [
   "function voteHazard(uint256 hazardId, bool up)"
 ];
 
+
+if (process.env.NODE_ENV === 'production' && !process.env.USE_KMS) {
+  throw new Error('Use KMS in production!');
+}
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
 const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS!, abi, signer);
