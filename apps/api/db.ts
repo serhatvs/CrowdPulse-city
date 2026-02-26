@@ -1,3 +1,21 @@
+export async function findRecentDuplicate(
+  lat: number, lon: number, type: string
+): Promise<boolean> {
+  const minLatE6 = Math.floor((lat - 0.0001) * 1e6);
+  const maxLatE6 = Math.ceil((lat + 0.0001) * 1e6);
+  const minLonE6 = Math.floor((lon - 0.0001) * 1e6);
+  const maxLonE6 = Math.ceil((lon + 0.0001) * 1e6);
+  const { rows } = await pool.query(
+    `SELECT 1 FROM hazards
+     WHERE latE6 BETWEEN $1 AND $2
+     AND lonE6 BETWEEN $3 AND $4
+     AND type = $5
+     AND created_at > NOW() - INTERVAL '1 hour'
+     LIMIT 1`,
+    [minLatE6, maxLatE6, minLonE6, maxLonE6, type]
+  );
+  return rows.length > 0;
+}
 
 import { Pool } from 'pg';
 
@@ -46,17 +64,30 @@ export async function voteHazard(hazardId: number, voter: string, value: number)
   return rows[0] || null;
 }
 
+
+export async function getHazardsInBbox(
+  bounds: { minLat: number; minLon: number; maxLat: number; maxLon: number }
+): Promise<any[]> {
   const minLatE6 = Math.floor(bounds.minLat * 1e6);
   const minLonE6 = Math.floor(bounds.minLon * 1e6);
   const maxLatE6 = Math.ceil(bounds.maxLat * 1e6);
   const maxLonE6 = Math.ceil(bounds.maxLon * 1e6);
   const { rows: hazards } = await pool.query(
-    `SELECT * FROM hazards WHERE latE6 >= $1 AND latE6 <= $2 AND lonE6 >= $3 AND lonE6 <= $4 AND created_at > NOW() - INTERVAL '1 hour'`,
+    `SELECT * FROM hazards WHERE latE6 >= $1 AND latE6 <= $2 AND lonE6 >= $3 AND lonE6 <= $4`,
     [minLatE6, maxLatE6, minLonE6, maxLonE6]
   );
+  const ids = hazards.map(h => h.id);
+  if (ids.length === 0) return hazards;
+  const { rows: allVotes } = await pool.query(
+    'SELECT * FROM votes WHERE hazard_id = ANY($1)',
+    [ids]
+  );
+  const votesByHazard = allVotes.reduce((acc, v) => {
+    (acc[v.hazard_id] ??= []).push(v);
+    return acc;
+  }, {} as Record<number, any[]>);
   for (const h of hazards) {
-    const { rows: votes } = await pool.query('SELECT * FROM votes WHERE hazard_id = $1', [h.id]);
-    h.votes = votes.map(v => ({
+    h.votes = (votesByHazard[h.id] ?? []).map(v => ({
       value: v.value,
       created_at: Math.floor(new Date(v.created_at).getTime() / 1000),
       voter: v.voter,

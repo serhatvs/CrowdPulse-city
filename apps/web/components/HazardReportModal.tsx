@@ -25,10 +25,22 @@ export default function HazardReportModal({ isOpen, onClose, onSubmit, initialLa
       <h2>Engel Raporla</h2>
       <form onSubmit={handleSubmit}>
         <label>Enlem (lat):
-          <input type="number" value={lat} onChange={e => setLat(Number(e.target.value))} required />
+          <input
+            type="number"
+            value={lat ?? ''}
+            onChange={e => setLat(e.target.value === '' ? null : Number(e.target.value))}
+            placeholder="Haritadan seçin veya girin"
+            required
+          />
         </label>
         <label>Boylam (lon):
-          <input type="number" value={lon} onChange={e => setLon(Number(e.target.value))} required />
+          <input
+            type="number"
+            value={lon ?? ''}
+            onChange={e => setLon(e.target.value === '' ? null : Number(e.target.value))}
+            placeholder="Haritadan seçin veya girin"
+            required
+          />
         </label>
         <label>Kategori:
           <select value={category} onChange={e => setCategory(Number(e.target.value))}>

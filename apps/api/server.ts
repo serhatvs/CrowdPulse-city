@@ -1,20 +1,13 @@
 import { logEvent } from "./auditLog";
 // Duplicate detection ve bbox limit middleware
 const MAX_BBOX_AREA = 0.5; // derece^2, örnek limit
+import { createHazard, getHazardsInBbox, voteHazard, pool, findRecentDuplicate } from "./db";
+
 async function duplicateHazardCheck(req, res, next) {
   const { lat, lon, type } = req.body ?? {};
   if (typeof lat !== "number" || typeof lon !== "number" || !type) return next();
-  // Aynı koordinat ve tipte son 1 saat içinde varsa spam say
-  const hazards = await getHazardsInBbox({
-    minLat: lat - 0.0001,
-    minLon: lon - 0.0001,
-    maxLat: lat + 0.0001,
-    maxLon: lon + 0.0001,
-    type,
-    withinLastHour: true
-  });
-  const recent = hazards.find(h => h.type === type);
-  if (recent) {
+  const isDuplicate = await findRecentDuplicate(lat, lon, type);
+  if (isDuplicate) {
     return res.status(409).json({ error: "Duplicate hazard detected (last 1 hour)" });
   }
   next();
@@ -99,7 +92,7 @@ app.post("/api/hazards", walletAuth, duplicateHazardCheck, async (req, res) => {
     }
     const hazard = await createHazard({ lat, lon, type, description, created_by, category, severity });
     if (chainId && hazard?.id) {
-      await require('./db').pool.query('UPDATE hazards SET chain_hazard_id=$1 WHERE id=$2', [chainId, hazard.id]);
+      await pool.query('UPDATE hazards SET chain_hazard_id=$1 WHERE id=$2', [chainId, hazard.id]);
     }
     await logEvent("hazard_created", { hazard, wallet: req.walletAddress });
     return res.status(201).json(hazard);

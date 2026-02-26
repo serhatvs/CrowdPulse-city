@@ -36,6 +36,13 @@ export function calculateRiskScore({
   // Risk = severity * |evidenceNorm| * sign(evidenceNorm)
   let risk = sev * evidenceNorm;
 
+  // Freshness: lastActivityTimestamp ile ek faktör
+  if (lastActivityTimestamp) {
+    const inactivityDays = (now - lastActivityTimestamp) / 86400;
+    const freshnessFactor = Math.exp(-inactivityDays * Math.LN2 / 7); // 7 gün half-life
+    risk = risk * freshnessFactor;
+  }
+
   // Normalize to 0-100
   risk = Math.max(0, Math.min(100, Math.round(Math.abs(risk) * 4)));
 

@@ -1,3 +1,13 @@
+  it("should revert close if not reporter", async function () {
+    await contract.reportHazard(38500000, 35500000, 1, 3, 'uri');
+    for (let i = 0; i < 10; i++) {
+      await contract.connect((await ethers.getSigners())[i]).voteHazard(0, true);
+    }
+    // addr1 reporter değil
+    await expect(
+      contract.connect(addr1).closeHazard(0)
+    ).to.be.revertedWith('not reporter');
+  });
 import { expect } from "chai";
 import { ethers } from "hardhat";
 

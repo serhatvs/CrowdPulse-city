@@ -3,18 +3,30 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3";
 
-// API'den heatmap verisi çekmek için örnek endpoint
-async function fetchHeatmap(bbox) {
-  // bbox: { minLat, minLon, maxLat, maxLon }
-  const res = await fetch(`/api/heatmap?bbox=${bbox.minLat},${bbox.minLon},${bbox.maxLat},${bbox.maxLon}`);
-  return await res.json(); // [{ lat, lon, risk }]
+
+// API'den heatmap verisi çekmek için endpoint (hata yönetimi ve abort destekli)
+async function fetchHeatmap(bbox, signal) {
+  const res = await fetch(`/api/heatmap?bbox=${bbox.minLat},${bbox.minLon},${bbox.maxLat},${bbox.maxLon}`, { signal });
+  if (!res.ok) throw new Error(res.statusText);
+  return await res.json();
 }
 
 export default function CityPulseHeatmap({ bbox }) {
   const [heatmapData, setHeatmapData] = useState([]);
 
+
   useEffect(() => {
-    fetchHeatmap(bbox).then(setHeatmapData);
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const data = await fetchHeatmap(bbox, controller.signal);
+        setHeatmapData(data);
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error('Heatmap fetch hatası', e);
+      }
+    }
+    load();
+    return () => controller.abort();
   }, [bbox]);
 
   // HeatmapLayer expects: [{lat, lng, intensity}]

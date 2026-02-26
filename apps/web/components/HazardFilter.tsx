@@ -14,7 +14,12 @@ export default function HazardFilter({ onFilter }) {
   const [maxRisk, setMaxRisk] = useState(100);
   const [timeWindow, setTimeWindow] = useState(24); // saat
 
+
   function handleFilter() {
+    if (minRisk > maxRisk) {
+      alert('Minimum risk maksimumdan büyük olamaz.');
+      return;
+    }
     onFilter({
       category: selectedCategory,
       minRisk,
@@ -22,6 +27,12 @@ export default function HazardFilter({ onFilter }) {
       timeWindow
     });
   }
+
+  // Otomatik filtre tetikleme (debounced değil, anında)
+  React.useEffect(() => {
+    handleFilter();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, minRisk, maxRisk, timeWindow]);
 
   return (
     <div style={{ padding: 8, background: "#f5f5f5", borderRadius: 8 }}>

@@ -1,18 +1,32 @@
-import { ethers } from "ethers";
+  contract.on("HazardVoted", async (hazardId, voter, up) => {
+    try {
+      const value = up ? 1 : -1;
+      await pool.query(
+        `INSERT INTO votes (hazard_id, voter, value)
+         SELECT id, $2, $3 FROM hazards
+         WHERE chain_hazard_id = $1
+         ON CONFLICT (hazard_id, voter) DO NOTHING`,
+        [Number(hazardId), voter.toLowerCase(), value]
+      );
+    } catch (e) {
+      console.error('HazardVoted DB hatası:', e);
+    }
+  });
 
-// CityPulse ABI (kısaltılmış, sadece eventler)
+import { ethers } from "ethers";
+import { createHazard, pool } from "../../apps/api/db";
+
+if (!process.env.RPC_URL || !process.env.CONTRACT_ADDRESS) {
+  throw new Error('RPC_URL ve CONTRACT_ADDRESS gerekli');
+}
+
 const abi = [
   "event HazardReported(uint256 indexed hazardId, int32 latE6, int32 lonE6, uint8 category, uint8 severity, address reporter, string noteURI)",
   "event HazardVoted(uint256 indexed hazardId, address indexed voter, bool up)",
   "event HazardClosed(uint256 indexed hazardId)"
 ];
-
-// Ağ ve sözleşme adresi
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, provider);
-
-
-import { createHazard, pool } from "../../apps/api/db";
 
 function listenCityPulseEvents() {
   contract.on("HazardReported", async (hazardId, latE6, lonE6, category, severity, reporter, noteURI, event) => {

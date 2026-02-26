@@ -47,6 +47,8 @@ export function astarPath(grid, start, end, options = {}) {
   const openSet = new MinPriorityQueue(node => node.f);
   openSet.enqueue({ ...start, g: 0, f: heuristic(start, end), parent: null });
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const gScore = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+  gScore[start.y][start.x] = 0;
 
   while (!openSet.isEmpty()) {
     const current = openSet.dequeue().element;
@@ -65,6 +67,8 @@ export function astarPath(grid, start, end, options = {}) {
       const cell = grid[neighbor.y][neighbor.x];
       const cost = cellCost(cell);
       const g = current.g + cost;
+      if (g >= gScore[neighbor.y][neighbor.x]) continue;
+      gScore[neighbor.y][neighbor.x] = g;
       const f = g + heuristic(neighbor, end);
       openSet.enqueue({ ...neighbor, g, f, parent: current });
     }

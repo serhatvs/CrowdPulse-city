@@ -24,14 +24,21 @@ services:
     image: node:20-alpine
     working_dir: /app
     command: sh -c "npm ci -ws --include-workspace-root && npm --workspace @crowdpulse/api run start"
-        healthcheck:
-          test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-          interval: 2s
-          timeout: 2s
-          retries: 30
-          start_period: 20s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 20s
     environment:
       PORT: 3001
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/crowdpulse
+      RPC_URL: http://hardhat:8545
+      CONTRACT_ADDRESS: ${CONTRACT_ADDRESS}
+      PRIVATE_KEY: ${PRIVATE_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./:/app
     ports:
