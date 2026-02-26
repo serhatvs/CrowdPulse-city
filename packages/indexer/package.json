@@ -1,0 +1,17 @@
+{
+  "name": "@crowdpulse/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --import tsx citypulseListener.ts",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "ethers": "^6.13.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

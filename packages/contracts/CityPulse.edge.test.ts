@@ -9,7 +9,7 @@ describe("CityPulse Edge Cases", function () {
     [owner, addr1, addr2] = await ethers.getSigners();
     const CityPulse = await ethers.getContractFactory("CityPulse");
     contract = await CityPulse.deploy();
-    await contract.deployed();
+    await contract.waitForDeployment();
   });
 
   it("should revert voting on closed hazard", async function () {

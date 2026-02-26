@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: crowdpulse
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  hardhat:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm --workspace @crowdpulse/contracts run node"
+    volumes:
+      - ./:/app
+    ports:
+      - "8545:8545"
+
+  api:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm --workspace @crowdpulse/api run start"
+    environment:
+      PORT: 3001
+    volumes:
+      - ./:/app
+    ports:
+      - "3001:3001"
+
+volumes:
+  pgdata:
