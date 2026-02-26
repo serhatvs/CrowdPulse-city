@@ -3,32 +3,41 @@
 // Evidence: log weighted votes
 // Freshness: exponential decay (72h half-life)
 
+
+// Trust score: 0-1 arası, kullanıcıya göre
+// votes: [{ value: 1|-1, created_at: timestamp, voter: string, trust: 0-1 }]
 export function calculateRiskScore({
   severity,
-  upvotes,
-  downvotes,
+  votes,
   lastActivityTimestamp
 }) {
   // Normalize severity
   const sev = Math.max(1, Math.min(5, severity));
 
-  // Evidence: log2(upvotes + 1) - log2(downvotes + 1)
-  const evidence = Math.log2(upvotes + 1) - Math.log2(downvotes + 1);
-  // Clamp evidence to [0, 5]
-  const evidenceNorm = Math.max(0, Math.min(5, evidence));
-
-  // Freshness: exponential decay
+  // Vote aging ve trust ağırlığı
   const now = Date.now() / 1000; // seconds
-  const dt = now - lastActivityTimestamp;
   const halfLife = 72 * 3600; // 72 saat
-  const freshness = Math.exp(-dt * Math.LN2 / halfLife);
+  let weightedSum = 0;
+  let weightTotal = 0;
+  for (const v of votes) {
+    const dt = now - v.created_at;
+    const ageWeight = Math.exp(-dt * Math.LN2 / halfLife); // taze oy daha değerli
+    const trust = typeof v.trust === 'number' ? v.trust : 1; // default 1
+    const w = ageWeight * trust;
+    weightedSum += v.value * w;
+    weightTotal += w;
+  }
+  // Kanıt: ağırlıklı oy toplamı (log ölçekli)
+  const evidence = weightTotal > 0 ? Math.max(0, Math.log2(Math.abs(weightedSum) + 1)) * Math.sign(weightedSum) : 0;
+  // Clamp evidence to [-5, 5]
+  const evidenceNorm = Math.max(-5, Math.min(5, evidence));
 
   // Risk score: combine
-  // Risk = severity * evidenceNorm * freshness
-  let risk = sev * evidenceNorm * freshness;
+  // Risk = severity * |evidenceNorm| * sign(evidenceNorm)
+  let risk = sev * evidenceNorm;
 
   // Normalize to 0-100
-  risk = Math.max(0, Math.min(100, Math.round(risk * 4)));
+  risk = Math.max(0, Math.min(100, Math.round(Math.abs(risk) * 4)));
 
   return risk;
 }

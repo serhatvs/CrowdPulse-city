@@ -14,7 +14,7 @@ function gridCell(latE6, lonE6) {
 }
 
 /**
- * @param {Array} hazards - [{ latE6, lonE6, severity, upvotes, downvotes, lastActivityTimestamp }]
+ * @param {Array} hazards - [{ latE6, lonE6, severity, votes, lastActivityTimestamp }]
  * @returns {Object} heatmap - { "lat_lon": { avgRisk, count } }
  */
 export function aggregateHeatmap(hazards) {
@@ -22,7 +22,11 @@ export function aggregateHeatmap(hazards) {
   for (const h of hazards) {
     const cell = gridCell(h.latE6, h.lonE6);
     const key = `${cell.lat}_${cell.lon}`;
-    const risk = calculateRiskScore(h);
+    const risk = calculateRiskScore({
+      severity: h.severity,
+      votes: h.votes || [],
+      lastActivityTimestamp: h.lastActivityTimestamp
+    });
     if (!grid[key]) {
       grid[key] = { totalRisk: 0, count: 0 };
     }
