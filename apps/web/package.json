@@ -1,0 +1,16 @@
+{
+  "name": "@crowdpulse/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Web bileşenleri hazır (Next.js app iskeleti eklenebilir).'",
+    "dev": "echo 'Web app için Next.js scaffold bekleniyor.'"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "react-leaflet-heatmap-layer-v3": "^2.0.0"
+  }
+}

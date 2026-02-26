@@ -1,0 +1,20 @@
+{
+  "name": "crowdpulse-city",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run -ws build --if-present",
+    "test": "npm run -ws test --if-present",
+    "lint": "npm run -ws lint --if-present",
+    "dev:api": "npm --workspace @crowdpulse/api run dev",
+    "dev:indexer": "npm --workspace @crowdpulse/indexer run dev",
+    "test:contracts": "npm --workspace @crowdpulse/contracts run test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

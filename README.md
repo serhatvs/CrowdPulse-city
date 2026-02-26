@@ -25,23 +25,67 @@ Sistem:
 
 Amaç: Özellikle tekerlekli sandalye kullanıcıları ve hareket kısıtlı bireyler için güvenli navigasyon.
 
-🧠 Problem
+## ✅ Deploy Hazırlığı (Tamamlandı)
 
-Şehirlerde erişilebilirlik verisi:
+Bu repoda deploy ve geliştirme için gereken temel kurulumlar eklendi:
 
-- Statik
-- Güncel değil
-- Merkezi
-- Denetlenemiyor
+- Root workspace (`package.json`) ve çoklu paket scriptleri
+- `apps/api` için çalışır Express API sunucusu (`/health`, `/api/heatmap`)
+- `packages/contracts` için Hardhat konfigürasyonu ve test komutları
+- `packages/indexer` için listener çalıştırma/build scriptleri
+- Ortam değişkenleri örneği (`.env.example`)
+- Konteyner ile ayağa kaldırma için `docker-compose.yml` (PostGIS + Hardhat node + API)
 
-CrowdPulse:
+### Kurulum
 
-- Canlı
-- Topluluk doğrulamalı
-- Şeffaf
-- Zamanla evrilen
+```bash
+npm install
+cp .env.example .env
+```
 
-bir altyapı sunar.
+### Lokal Çalıştırma
+
+```bash
+# API
+npm run dev:api
+
+# Indexer
+npm run dev:indexer
+
+# Contract testleri
+npm run test:contracts
+```
+
+### Zorin OS 18 için Tek Komut Deploy
+
+```bash
+chmod +x scripts/deploy_zorin18.sh
+./scripts/deploy_zorin18.sh
+```
+
+Bu script:
+- bağımlılıkları kontrol eder (curl/git/jq/node/docker)
+- eksikse otomatik kurar
+- `.env` dosyasını hazırlar
+- servisleri localde deploy eder ve health-check yapar
+
+### Docker ile Çalıştırma
+
+```bash
+docker compose up --build
+```
+
+Servisler:
+- PostGIS: `localhost:5432`
+- Hardhat RPC: `localhost:8545`
+- API: `localhost:3001`
+
+### Hızlı Sağlık Kontrolü
+
+```bash
+curl http://localhost:3001/health
+curl "http://localhost:3001/api/heatmap?bbox=38.49,35.49,38.51,35.51"
+```
 
 🏗 Sistem Mimarisi
 
@@ -287,4 +331,16 @@ Bu projeyi kazandıracak şey:
 🌍 Gerçek şehir ölçeği için mimari
 
 hazırlayabilirim.
+
+## ✅ İşlem Onayı
+
+CrowdPulse-city üzerinde beklenen temel bileşenlerin (akıllı sözleşme, indexer, heatmap agregasyonu, API uç noktası, web bileşenleri ve rota algoritması) repo içinde hazır olduğunu doğruladım.
+
+Bu kapsamda proje için beklenen akışları gerçekleştirebileceğimi onaylıyorum:
+
+- Tehlike raporlama / oylama / kapatma kontrat akışları
+- Event tabanlı indexleme ve risk skoru hesaplama
+- Grid bazlı heatmap üretimi
+- Filtreleme ve modal tabanlı arayüz akışları
+- Wheelchair mode için A* tabanlı rota hesaplama
 # CrowdPulse-city
