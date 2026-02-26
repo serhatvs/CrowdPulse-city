@@ -1,16 +1,54 @@
 import express from "express";
 import { aggregateHeatmap } from "../../packages/indexer/heatmapAggregate";
+import { createHazard, getHazardsInBbox, voteHazard } from "./db";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
 
-const hazards = [
-  { latE6: 38500000, lonE6: 35500000, severity: 4, upvotes: 8, downvotes: 1, lastActivityTimestamp: Math.floor(Date.now() / 1000) - 3600 },
-  { latE6: 38500200, lonE6: 35500400, severity: 2, upvotes: 4, downvotes: 0, lastActivityTimestamp: Math.floor(Date.now() / 1000) - 7200 }
-];
+app.use(express.json());
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "crowdpulse-api" });
+});
+
+app.post("/api/hazards", (req, res) => {
+  const { lat, lon, severity, description } = req.body ?? {};
+
+  if (typeof lat !== "number" || typeof lon !== "number") {
+    return res.status(400).json({ error: "lat and lon must be numbers" });
+  }
+
+  if (!Number.isInteger(severity) || severity < 1 || severity > 5) {
+    return res.status(400).json({ error: "severity must be an integer between 1 and 5" });
+  }
+
+  if (description !== undefined && description !== null && typeof description !== "string") {
+    return res.status(400).json({ error: "description must be a string" });
+  }
+
+  const hazard = createHazard({ lat, lon, severity, description });
+  return res.status(201).json(hazard);
+});
+
+app.post("/api/hazards/:id/vote", (req, res) => {
+  const { id } = req.params;
+  const { vote } = req.body ?? {};
+
+  if (vote !== "up" && vote !== "down") {
+    return res.status(400).json({ error: "vote must be 'up' or 'down'" });
+  }
+
+  const updated = voteHazard(id, vote);
+  if (!updated) {
+    return res.status(404).json({ error: "hazard not found" });
+  }
+
+  return res.json({
+    id: updated.id,
+    upvotes: updated.upvotes,
+    downvotes: updated.downvotes,
+    lastActivityTimestamp: updated.lastActivityTimestamp
+  });
 });
 
 app.get("/api/heatmap", (req, res) => {
@@ -22,16 +60,10 @@ app.get("/api/heatmap", (req, res) => {
   }
 
   const [minLat, minLon, maxLat, maxLon] = bbox;
-  const minLatE6 = Math.floor(minLat * 1e6);
-  const minLonE6 = Math.floor(minLon * 1e6);
-  const maxLatE6 = Math.ceil(maxLat * 1e6);
-  const maxLonE6 = Math.ceil(maxLon * 1e6);
 
-  const filtered = hazards.filter(
-    (h) => h.latE6 >= minLatE6 && h.latE6 <= maxLatE6 && h.lonE6 >= minLonE6 && h.lonE6 <= maxLonE6
-  );
+  const hazards = getHazardsInBbox({ minLat, minLon, maxLat, maxLon });
+  const heatmap = aggregateHeatmap(hazards);
 
-  const heatmap = aggregateHeatmap(filtered);
   const cells = Object.entries(heatmap).map(([key, val]) => {
     const [latGrid, lonGrid] = key.split("_").map(Number);
     return {
