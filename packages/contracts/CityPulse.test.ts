@@ -4,6 +4,14 @@ import { ethers } from "hardhat";
 describe("CityPulse", function () {
   let contract;
   let owner, addr1, addr2;
+
+  beforeEach(async function () {
+    [owner, addr1, addr2] = await ethers.getSigners();
+    const CityPulse = await ethers.getContractFactory("CityPulse");
+    contract = await CityPulse.deploy();
+    await contract.waitForDeployment();
+  });
+
   it("should revert close if not reporter", async function () {
     await contract.reportHazard(38500000, 35500000, 1, 3, 'uri');
     for (let i = 0; i < 10; i++) {
@@ -13,13 +21,6 @@ describe("CityPulse", function () {
     await expect(
       contract.connect(addr1).closeHazard(0)
     ).to.be.revertedWith('not reporter');
-  });
-
-  beforeEach(async function () {
-    [owner, addr1, addr2] = await ethers.getSigners();
-    const CityPulse = await ethers.getContractFactory("CityPulse");
-    contract = await CityPulse.deploy();
-    await contract.waitForDeployment();
   });
 
   it("should report hazard", async function () {

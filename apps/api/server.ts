@@ -1,7 +1,19 @@
+import express from "express";
+import LRU from 'lru-cache';
 import { logEvent } from "./auditLog";
+import { createHazard, getHazardsInBbox, voteHazard, pool, findRecentDuplicate } from "./db";
+import { aggregateHeatmap } from "../../packages/indexer/heatmapAggregate";
+import { reportHazardOnChain, voteHazardOnChain } from "./blockchain";
+
 // Duplicate detection ve bbox limit middleware
 const MAX_BBOX_AREA = 0.5; // derece^2, örnek limit
-import { createHazard, getHazardsInBbox, voteHazard, pool, findRecentDuplicate } from "./db";
+
+const RATE_LIMIT_WINDOW = 60; // saniye
+const RATE_LIMIT_MAX = 10; // 1 dakikada 10 istek
+const rateLimitMap = new LRU<string, { count: number; last: number }>({
+  max: 10000,
+  ttl: RATE_LIMIT_WINDOW * 1000,
+});
 
 async function duplicateHazardCheck(req, res, next) {
   const { lat, lon, type } = req.body ?? {};
@@ -26,15 +38,6 @@ function bboxLimitCheck(req, res, next) {
   }
   next();
 }
-// Basit wallet address auth ve rate limit middleware
-
-import LRU from 'lru-cache';
-const RATE_LIMIT_WINDOW = 60; // saniye
-const RATE_LIMIT_MAX = 10; // 1 dakikada 10 istek
-const rateLimitMap = new LRU<string, { count: number; last: number }>({
-  max: 10000,
-  ttl: RATE_LIMIT_WINDOW * 1000,
-});
 
 function walletAuth(req, res, next) {
   const address = req.headers["x-wallet-address"];
@@ -57,10 +60,6 @@ function walletAuth(req, res, next) {
   rateLimitMap.set(req.walletAddress, rl);
   next();
 }
-import express from "express";
-import { aggregateHeatmap } from "../../packages/indexer/heatmapAggregate";
-// ...
-import { reportHazardOnChain, voteHazardOnChain } from "./blockchain";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);

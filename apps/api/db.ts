@@ -1,6 +1,6 @@
 
 import { Pool } from 'pg';
-const pool = new Pool({
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@db:5432/postgres',
   max: 10,
 });
@@ -43,10 +43,7 @@ export type VoteRecord = {
   created_at: string;
 };
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@db:5432/postgres',
-  max: 10,
-});
+// ...existing code...
 
 export async function createHazard(input: { lat: number; lon: number; type: string; description?: string | null; created_by?: string | null; category?: number; severity?: number }): Promise<HazardRecord> {
   const latE6 = Math.round(input.lat * 1e6);

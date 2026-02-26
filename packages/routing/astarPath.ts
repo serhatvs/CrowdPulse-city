@@ -7,7 +7,17 @@
  * @param {Object} options - { riskThreshold, wheelchairMode }
  * @returns {Array} path - [{ x, y }]
  */
-import { MinPriorityQueue } from '@datastructures-js/priority-queue';
+
+type Cell = { risk: number; hasRamp?: boolean; hasStairs?: boolean };
+type Point = { x: number; y: number };
+type Options = { riskThreshold?: number; wheelchairMode?: boolean };
+
+export function astarPath(
+  grid: Cell[][],
+  start: Point,
+  end: Point,
+  options: Options = {}
+): Point[] {
 
 
   // Guard: grid boş veya satır yoksa
@@ -29,13 +39,13 @@ import { MinPriorityQueue } from '@datastructures-js/priority-queue';
     return [];
   }
 
-  function heuristic(a, b) {
+  function heuristic(a: Point, b: Point) {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
 
-  function getNeighbors(node) {
+  function getNeighbors(node: Point) {
     const dirs = [ [0,1], [1,0], [0,-1], [-1,0] ];
-    const neighbors = [];
+    const neighbors: Point[] = [];
     for (const [dx, dy] of dirs) {
       const nx = node.x + dx;
       const ny = node.y + dy;
@@ -46,7 +56,7 @@ import { MinPriorityQueue } from '@datastructures-js/priority-queue';
     return neighbors;
   }
 
-  function cellCost(cell) {
+  function cellCost(cell: Cell) {
     let cost = 1;
     if (cell.risk > riskThreshold) cost += 100;
     if (wheelchairMode) {

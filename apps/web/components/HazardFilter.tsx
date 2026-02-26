@@ -8,25 +8,18 @@ const categories = [
   { value: 5, label: "Kaygan zemin" }
 ];
 
-export default function HazardFilter({ onFilter }) {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [minRisk, setMinRisk] = useState(0);
   const [maxRisk, setMaxRisk] = useState(100);
   const [timeWindow, setTimeWindow] = useState(24); // saat
 
+  // Debounce için timerRef bileşen seviyesinde
+  const timerRef = useRef();
 
-
-  // Debounce fonksiyonu
-  const debounce = (fn, delay) => {
-    const timer = useRef();
-    return (...args) => {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => fn(...args), delay);
-    };
-  };
-
-  const handleFilter = useCallback(
-    debounce(() => {
+  // Otomatik filtre tetikleme (debounced)
+  React.useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
       if (minRisk > maxRisk) {
         alert('Minimum risk maksimumdan büyük olamaz.');
         return;
@@ -37,15 +30,10 @@ export default function HazardFilter({ onFilter }) {
         maxRisk,
         timeWindow
       });
-    }, 300),
-    [selectedCategory, minRisk, maxRisk, timeWindow, onFilter]
-  );
-
-  // Otomatik filtre tetikleme (debounced)
-  React.useEffect(() => {
-    handleFilter();
+    }, 300);
+    return () => clearTimeout(timerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleFilter]);
+  }, [selectedCategory, minRisk, maxRisk, timeWindow, onFilter]);
 
   return (
     <div style={{ padding: 8, background: "#f5f5f5", borderRadius: 8 }}>

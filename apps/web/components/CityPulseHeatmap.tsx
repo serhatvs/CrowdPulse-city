@@ -11,18 +11,24 @@ async function fetchHeatmap(bbox, signal) {
   return await res.json();
 }
 
-export default function CityPulseHeatmap({ bbox }) {
   const [heatmapData, setHeatmapData] = useState([]);
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
     async function load() {
+      setLoading(true);
+      setError(null);
       try {
         const data = await fetchHeatmap(bbox, controller.signal);
         setHeatmapData(data);
       } catch (e) {
-        if (e.name !== 'AbortError') console.error('Heatmap fetch hatası', e);
+        if (e.name !== 'AbortError') {
+          setError(e.message || 'Heatmap fetch hatası');
+        }
+      } finally {
+        setLoading(false);
       }
     }
     load();
@@ -35,6 +41,9 @@ export default function CityPulseHeatmap({ bbox }) {
     lng: cell.lon,
     intensity: cell.risk // 0-100
   }));
+
+  if (loading) return <div>Harita yükleniyor...</div>;
+  if (error) return <div style={{ color: 'red' }}>Harita yüklenemedi: {error}</div>;
 
   return (
     <MapContainer center={[bbox.minLat, bbox.minLon]} zoom={14} style={{ height: "100vh", width: "100%" }}>

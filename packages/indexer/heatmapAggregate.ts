@@ -36,6 +36,7 @@ export function aggregateHeatmap(hazards) {
   // Ortalama risk hesapla
   const heatmap = {};
   for (const key in grid) {
+    // ...existing code...
     // Alias export fonksiyon dışında
     export { aggregateHeatmap as getHeatmapData };
     heatmap[key] = {
