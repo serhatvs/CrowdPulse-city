@@ -7,14 +7,34 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run -ws build --if-present",
-    "test": "npm run -ws test --if-present",
-    "lint": "npm run -ws lint --if-present",
+    "setup": "npm install --workspaces --include-workspace-root",
+    "migrate": "npm --workspace @crowdpulse/api run migrate",
+    "bootstrap": "npm run setup && npm run migrate",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
     "dev:api": "npm --workspace @crowdpulse/api run dev",
+    "dev:web": "npm --workspace @crowdpulse/web run dev",
+    "dev:web:e2e": "npm --workspace @crowdpulse/web run dev -- --host 127.0.0.1 --port 4173",
     "dev:indexer": "npm --workspace @crowdpulse/indexer run dev",
-    "test:contracts": "npm --workspace @crowdpulse/contracts run test"
+    "test:contracts": "npm --workspace @crowdpulse/contracts run test",
+    "deploy:local": "node --import tsx scripts/deploy-local.ts",
+    "deploy:monad": "node --import tsx scripts/deploy-monad.ts",
+    "demo:up": "docker compose up -d postgres hardhat api indexer",
+    "demo:down": "docker compose down",
+    "demo:init": "node --import tsx scripts/demo-init.ts",
+    "health:demo": "node --import tsx scripts/demo-health.ts",
+    "reset:demo": "node --import tsx scripts/reset-demo.ts",
+    "seed:demo": "node --import tsx scripts/seed-demo.ts",
+    "verify:demo": "node --import tsx scripts/verify-demo.ts",
+    "playwright:install": "playwright install chromium",
+    "test:smoke": "npm run demo:init && playwright test -c e2e/playwright.config.ts"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "tsx": "^4.20.5"
   }
 }

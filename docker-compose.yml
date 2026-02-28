@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   postgres:
     image: postgis/postgis:16-3.4
@@ -20,13 +19,14 @@ services:
   hardhat:
     image: node:20-alpine
     working_dir: /app
-    command: sh -c "npm ci && npm --workspace @crowdpulse/contracts run node"
+    command: sh -c "if [ ! -x node_modules/.bin/hardhat ]; then npm ci --workspaces --include-workspace-root; fi && npm --workspace @crowdpulse/contracts run node"
     volumes:
       - ./:/app
+      - hardhat_node_modules:/app/node_modules
     ports:
       - "8545:8545"
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "8545"]
+      test: ["CMD", "node", "-e", "const http=require('http');const req=http.request({host:'127.0.0.1',port:8545,method:'POST',headers:{'content-type':'application/json'}},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));req.write('{\"jsonrpc\":\"2.0\",\"method\":\"eth_chainId\",\"params\":[],\"id\":1}');req.end();setTimeout(()=>process.exit(1),1500);"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -35,9 +35,9 @@ services:
   api:
     image: node:20-alpine
     working_dir: /app
-    command: sh -c "npm ci -ws --include-workspace-root && npm --workspace @crowdpulse/api run start"
+    command: sh -c "if [ ! -x node_modules/.bin/tsx ]; then npm ci --workspaces --include-workspace-root; fi && npm run migrate && npm --workspace @crowdpulse/api run start"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "node", "-e", "const http=require('http');http.get('http://127.0.0.1:3001/health',res=>process.exit(res.statusCode===200?0:1)).on('error',()=>process.exit(1));"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -45,9 +45,12 @@ services:
     environment:
       PORT: 3001
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/crowdpulse
-      RPC_URL: http://hardhat:8545
+      RPC_URL: ${DOCKER_RPC_URL:-http://hardhat:8545}
       CONTRACT_ADDRESS: ${CONTRACT_ADDRESS}
       PRIVATE_KEY: ${PRIVATE_KEY}
+      REQUIRE_SIGNATURE_AUTH: ${REQUIRE_SIGNATURE_AUTH:-true}
+      ENABLE_ONCHAIN_MUTATIONS: ${ENABLE_ONCHAIN_MUTATIONS:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,8 +58,54 @@ services:
         condition: service_healthy
     volumes:
       - ./:/app
+      - api_node_modules:/app/node_modules
     ports:
       - "3001:3001"
 
+  indexer:
+    image: node:20-alpine
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - >
+        if [ ! -x node_modules/.bin/tsx ]; then npm ci --workspaces --include-workspace-root; fi &&
+        if [ -z "$CONTRACT_ADDRESS" ] || [ "$CONTRACT_ADDRESS" = "0x0000000000000000000000000000000000000000" ]; then
+          echo "Indexer idle: set CONTRACT_ADDRESS to start listener." && tail -f /dev/null;
+        else
+          npm --workspace @crowdpulse/indexer run dev;
+        fi
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/crowdpulse
+      RPC_URL: ${DOCKER_RPC_URL:-http://hardhat:8545}
+      CONTRACT_ADDRESS: ${CONTRACT_ADDRESS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      hardhat:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+      - indexer_node_modules:/app/node_modules
+
+  web:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "if [ ! -x node_modules/.bin/vite ]; then npm ci --workspaces --include-workspace-root; fi && npm --workspace @crowdpulse/web run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+    environment:
+      VITE_DEV_PROXY_TARGET: http://api:3001
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+      - web_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+
 volumes:
   pgdata:
+  hardhat_node_modules:
+  api_node_modules:
+  indexer_node_modules:
+  web_node_modules:

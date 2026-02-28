@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install --workspaces --include-workspace-root",
+  "buildCommand": "npm --workspace @crowdpulse/web run build",
+  "outputDirectory": "apps/web/dist"
+}

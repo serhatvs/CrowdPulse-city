@@ -1,0 +1,334 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap");
+
+:root {
+  --bg: #f4efe4;
+  --panel: #fbf8f2;
+  --ink: #1f2628;
+  --muted: #516164;
+  --accent: #0f7f73;
+  --accent-2: #c96c38;
+  --line: #d9d1bf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Bricolage Grotesque", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 5% 5%, #fff4d8 0%, rgba(255, 244, 216, 0) 35%),
+    radial-gradient(circle at 90% 8%, #d7f3ee 0%, rgba(215, 243, 238, 0) 40%),
+    var(--bg);
+}
+
+.app-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  gap: 18px;
+}
+
+.hero {
+  background: linear-gradient(135deg, #123d3f, #21646a);
+  color: #ecfaf9;
+  border-radius: 16px;
+  padding: 18px 22px;
+  box-shadow: 0 10px 30px rgba(18, 61, 63, 0.2);
+}
+
+.hero h1 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 2.8vw, 36px);
+  letter-spacing: 0.2px;
+}
+
+.hero p {
+  margin: 0;
+  color: #c7e7e4;
+}
+
+.control-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 12px;
+  background: linear-gradient(135deg, var(--accent), #10a190);
+  color: #f4fffd;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #95ada8;
+  cursor: not-allowed;
+}
+
+.button-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button-link:hover {
+  text-decoration: underline;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #cfc7b8;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.status {
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--muted);
+  background: #f0eadb;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.status-warning {
+  color: #7c3405;
+  background: #ffe7d7;
+}
+
+.map-shell {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #e6f0ef;
+}
+
+.map-shell > div {
+  min-height: 640px;
+}
+
+.metrics-card {
+  display: grid;
+  align-content: start;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metrics-grid div {
+  background: #f0eadb;
+  border: 1px solid #e3dbc8;
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.metrics-grid span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.metrics-grid strong {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 16px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 14px;
+}
+
+.side-stack {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.row-between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-card {
+  gap: 10px;
+}
+
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: auto;
+  background: #fffdf8;
+  max-height: 460px;
+}
+
+.hazard-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.hazard-table th,
+.hazard-table td {
+  border-bottom: 1px solid #ece4d3;
+  padding: 8px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.hazard-table th {
+  background: #f5efdf;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.selected-row td {
+  background: #e4f5f1;
+}
+
+.compact-row {
+  gap: 6px;
+}
+
+.compact-row button {
+  min-width: 40px;
+  padding: 6px 8px;
+}
+
+.link-button {
+  background: transparent;
+  color: #0f7f73;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.activity-card {
+  max-height: 300px;
+  overflow: auto;
+}
+
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.activity-list li {
+  border: 1px solid #e7decb;
+  border-radius: 8px;
+  padding: 8px;
+  background: #faf6eb;
+  display: grid;
+  gap: 2px;
+}
+
+.activity-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.activity-list strong {
+  font-size: 13px;
+}
+
+@media (max-width: 1250px) {
+  .control-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .control-panel {
+    grid-template-columns: 1fr;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hazard-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 25, 29, 0.58);
+  backdrop-filter: blur(2px);
+  z-index: 9000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 16px;
+  overflow: auto;
+}
+
+.hazard-modal {
+  width: min(760px, 100%);
+  background: #fefcf8;
+  border: 1px solid #d8cfbe;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 30px 70px rgba(12, 34, 36, 0.32);
+  outline: none;
+}
+
+.hazard-modal h2 {
+  margin: 0 0 10px;
+}
+
+.hazard-form {
+  display: grid;
+  gap: 10px;
+}
+
+.hazard-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.hazard-modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true,
     "outDir": "dist"
   },
-  "include": ["./**/*.ts", "../../packages/indexer/**/*.ts"]
+  "include": ["./**/*.ts", "./**/*.d.ts"],
+  "exclude": ["./**/*.test.ts"]
 }

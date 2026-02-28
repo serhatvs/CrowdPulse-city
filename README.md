@@ -1,346 +1,168 @@
-🏙️ CrowdPulse City
-
-Kitle kaynaklı, zincir tabanlı, dinamik şehir erişilebilirlik haritası.
-
-🚀 Proje Özeti
-
-CrowdPulse City, şehir içindeki fiziksel erişilebilirlik risklerini topluluk tarafından raporlanan verilerle haritalayan, doğrulayan ve zaman içinde güncelleyen bir sistemdir.
-
-Kullanıcılar:
-
-- Kaldırım yüksekliği
-- Çukur / bozuk zemin
-- Rampa eksikliği
-- Merdiven
-- Kaygan zemin
-
-gibi erişilebilirlik engellerini raporlar ve doğrular.
-
-Sistem:
-
-- Zincir üstü event’leri indexler
-- Kanıt sayısı + tazelik + oy güveni ile risk skoru üretir
-- Heatmap üretir
-- Filtrelenebilir ve modlu rota önerisi sunar
-
-Amaç: Özellikle tekerlekli sandalye kullanıcıları ve hareket kısıtlı bireyler için güvenli navigasyon.
-
-## ✅ Deploy Hazırlığı (Tamamlandı)
-
-Bu repoda deploy ve geliştirme için gereken temel kurulumlar eklendi:
-
-- Root workspace (`package.json`) ve çoklu paket scriptleri
-- `apps/api` için çalışır Express API sunucusu (`/health`, `/api/heatmap`)
-- `packages/contracts` için Hardhat konfigürasyonu ve test komutları
-- `packages/indexer` için listener çalıştırma/build scriptleri
-- Ortam değişkenleri örneği (`.env.example`)
-- Konteyner ile ayağa kaldırma için `docker-compose.yml` (PostGIS + Hardhat node + API)
-
-### Kurulum
-
-```bash
-npm install
-cp .env.example .env
-```
-
-### Lokal Çalıştırma
-
-```bash
-# API
-npm run dev:api
-
-# Indexer
-npm run dev:indexer
-
-# Contract testleri
-npm run test:contracts
-```
-
-### Zorin OS 18 için Tek Komut Deploy
-
-```bash
-chmod +x scripts/deploy_zorin18.sh
-./scripts/deploy_zorin18.sh
-```
-
-Bu script:
-- bağımlılıkları kontrol eder (curl/git/jq/node/docker)
-- eksikse otomatik kurar
-- `.env` dosyasını hazırlar
-- servisleri localde deploy eder ve health-check yapar
-
-### Docker ile Çalıştırma
-
-```bash
-docker compose up --build
-```
-
-Servisler:
-- PostGIS: `localhost:5432`
-- Hardhat RPC: `localhost:8545`
-- API: `localhost:3001`
-
-### Hızlı Sağlık Kontrolü
-
-```bash
-curl http://localhost:3001/health
-curl "http://localhost:3001/api/heatmap?bbox=38.49,35.49,38.51,35.51"
-```
-
-🏗 Sistem Mimarisi
-
-Frontend
-
-- Next.js
-- Leaflet veya Mapbox
-- Heatmap + grid layer
-- Real-time fetch / SSE
-
-Smart Contract
-
-- CityPulse.sol
-- Fonksiyonlar:
-	- reportHazard(latE6, lonE6, category, severity, noteURI)
-	- voteHazard(hazardId, up)
-	- closeHazard(hazardId)
-- Event’ler:
-	- HazardReported
-	- HazardVoted
-	- HazardClosed
-
-Indexer
-
-- Event listener
-- Risk skoru hesaplama
-- Grid aggregation
-- REST API
-
-Database
-
-- PostgreSQL + PostGIS (ideal)
-- veya
-- SQLite + grid aggregation (hackathon)
-
-📊 Risk Skoru Modeli
-
-Risk = f(Severity × Evidence × Freshness)
-
-- Severity (1–5)
-- Evidence = log tabanlı oy ağırlığı
-- Freshness = exponential decay (72 saat yarı ömür)
-- Trust (opsiyonel)
-
-0–100 arası normalize edilir.
-
-🗺 Heatmap
-
-- 100m grid hücre
-- Hücre risk ortalaması
-- Renk skalası:
-	- Yeşil → Sarı → Kırmızı
-
-♿ Wheelchair Mode
-
-Rota hesaplanırken:
-
-- Rampalara bonus
-- Merdivenlere ağır ceza
-- Riskli hücrelerden kaçınma
-- Basit A* grid algoritması ile uygulanır.
-
-📁 Repo Yapısı
-
-crowdpulse-city/
-	apps/
-		web/
-		api/
-	packages/
-		contracts/
-		indexer/
-		shared/
-	docs/
-		pitch.md
-		dataset.md
-
-🧪 Demo Senaryosu
-
-Kayseri merkez bbox seçilir
-
-Script ile:
-
-- 1000 hazard
-- 2000 vote
-
-Harita canlı güncellenir
-
-Filtre → “Son 24 saat”
-
-Wheelchair mode → farklı rota
-
-🔮 Gelecek Özellikler
-
-- Sensör tabanlı pasif veri
-- DAO governance
-- Reputation sistemi
-- IPFS kanıt fotoğrafı
-- Belediye API entegrasyonu
-- ML anomaly detection
-
-🧠 AI-Driven Development Roadmap
-
-Bu proje AI destekli geliştirilecek şekilde planlandı.
-
-Phase 1 — Contract Generation
-
-AI görevleri:
-
-- Solidity contract yaz
-- Gas optimize et
-- Unit test üret
-- Edge-case test üret
-
-AI Prompt Örneği:
-
-Write a gas-efficient Solidity contract named CityPulse.
-It should allow users to:
-- report hazards
-- vote hazards
-- close hazards
-
-Use events for indexing.
-Prevent double voting.
-Use int32 for coordinates (E6 format).
-Include unit tests.
-
-Phase 2 — Indexer AI Assistance
-
-AI görevleri:
-
-- Event listener kodu üret
-- Risk scoring modülü yaz
-- Aggregation fonksiyonu üret
-- SQL schema tasarla
-
-Prompt:
-
-Design a PostgreSQL schema for a geospatial hazard reporting system.
-Include:
-- hazards
-- votes
-- aggregated grid cells
-- risk score field
-
-Optimize for heatmap queries within bounding box.
-
-Phase 3 — Frontend AI Assistance
-
-AI görevleri:
-
-- Leaflet heatmap layer yaz
-- Bounding box fetch logic
-- Modal form
-- Filter system
-
-Prompt:
-
-Create a React Leaflet map component that:
-- Fetches hazards within bbox
-- Displays markers
-- Displays heatmap layer
-- Includes filter by category and time
-
-Phase 4 — AI Assisted Routing
-
-Prompt:
-
-Implement A* pathfinding on a grid.
-Each cell has a risk score (0–100).
-Avoid cells above risk threshold.
-Add wheelchair mode weighting.
-
-🤖 MASTER PROMPT PACK (Kopyala Kullan)
-
-1️⃣ Contract Generator Prompt
-You are a senior blockchain engineer.
-
-Design a production-ready Solidity contract for a decentralized hazard reporting system.
-
-Requirements:
-- int32 latE6, lonE6
-- uint8 category
-- uint8 severity (1–5)
-- Prevent double voting
-- Events for indexer
-- Close hazard via community threshold
-
-Include comments and gas optimization.
-
-2️⃣ Risk Engine Prompt
-You are a backend engineer.
-
-Write a TypeScript module that calculates a dynamic risk score based on:
-- severity (1–5)
-- upvotes
-- downvotes
-- lastActivity timestamp
-
-Use exponential decay for freshness.
-Return normalized 0–100 score.
-
-3️⃣ Heatmap Aggregation Prompt
-Implement a function that:
-- Takes hazards list
-- Groups them into 100m grid cells
-- Calculates average risk per cell
-- Returns heatmap-ready JSON
-
-4️⃣ Seed Script Prompt
-Generate a Node.js script that:
-- Randomly generates 1000 hazards inside a bounding box
-- Randomly assigns categories and severity
-- Simulates 2000 votes
-- Sends transactions to contract
-
-5️⃣ Full System Architect Prompt
-Design a scalable architecture for a decentralized geospatial hazard mapping system.
-Include:
-- smart contracts
-- indexer
-- database
-- frontend
-- routing engine
-- scaling considerations
-
-🏆 Hackathon Winning Angle
-
-Bu projeyi kazandıracak şey:
-
-- Canlı event akışı
-- Riskin zamanla düşmesi
-- Toplulukla kapanan hazard
-- Wheelchair rota farkı
-
-İstersen bir sonraki mesajda:
-
-📄 Tam pitch deck metni
-
-🧮 Risk matematiğinin akademik versiyonu
-
-🗳 DAO + token modeli
-
-🌍 Gerçek şehir ölçeği için mimari
-
-hazırlayabilirim.
-
-## ✅ İşlem Onayı
-
-CrowdPulse-city üzerinde beklenen temel bileşenlerin (akıllı sözleşme, indexer, heatmap agregasyonu, API uç noktası, web bileşenleri ve rota algoritması) repo içinde hazır olduğunu doğruladım.
-
-Bu kapsamda proje için beklenen akışları gerçekleştirebileceğimi onaylıyorum:
-
-- Tehlike raporlama / oylama / kapatma kontrat akışları
-- Event tabanlı indexleme ve risk skoru hesaplama
-- Grid bazlı heatmap üretimi
-- Filtreleme ve modal tabanlı arayüz akışları
-- Wheelchair mode için A* tabanlı rota hesaplama
 # CrowdPulse-city
+
+CrowdPulse-city is a monorepo for a hackathon-ready accessibility hazard demo:
+
+- `apps/api`: Express API with wallet signature auth
+- `apps/web`: Vite + React map UI
+- `packages/contracts`: Hardhat contracts
+- `packages/indexer`: event listener and risk/heatmap logic
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Docker Desktop
+
+## One-command Demo Init
+
+```bash
+npm run setup
+npm run demo:init
+```
+
+If `.env` is missing, create it from `.env.example` first.
+
+`demo:init` does:
+
+1. starts `postgres + hardhat`
+2. deploys contract
+3. updates `.env` with deployed contract address
+4. starts/recreates `api + indexer`
+5. runs migrations
+6. resets and seeds demo data
+7. verifies and health-checks demo stack
+
+## Local Deploy (This Computer)
+
+```bash
+npm run deploy:local
+```
+
+This runs setup + build + test + demo init in order.
+
+## Monad Testnet Deploy
+
+Official Monad testnet values wired into this repo:
+
+- chain ID: `10143`
+- RPC: `https://testnet-rpc.monad.xyz`
+- explorer: `https://testnet.monadvision.com`
+- faucet: `https://faucet.monad.xyz`
+
+Before deploying:
+
+1. put a funded Monad testnet `PRIVATE_KEY` into `.env`
+2. optionally set `CORS_ORIGINS` for your frontend domain
+3. if frontend and API are on different domains, set `VITE_API_BASE_URL=https://your-api-host`
+
+Deploy contract and update `.env` for Monad in one step:
+
+```bash
+npm run deploy:monad
+```
+
+This command deploys `CityPulse`, updates `RPC_URL`, `CONTRACT_ADDRESS`, enables on-chain mutations, disables demo wallet mode, and writes the frontend Monad network vars.
+
+## Run Web UI
+
+```bash
+npm run dev:web
+```
+
+Open `http://localhost:5173`.
+
+For a separate frontend host such as Vercel, set `VITE_API_BASE_URL` to your API origin before building.
+
+## Vercel Frontend
+
+The repo now includes [`vercel.json`](./vercel.json) for deploying the Vite frontend from the monorepo root.
+
+Required Vercel env vars for Monad mode:
+
+- `VITE_API_BASE_URL`
+- `VITE_MONAD_REQUIRED=true`
+- `VITE_MONAD_CHAIN_ID=10143`
+- `VITE_MONAD_CHAIN_NAME=Monad Testnet`
+- `VITE_MONAD_RPC_URL=https://testnet-rpc.monad.xyz`
+- `VITE_MONAD_EXPLORER_URL=https://testnet.monadvision.com`
+- `VITE_MONAD_CURRENCY_NAME=Monad`
+- `VITE_MONAD_CURRENCY_SYMBOL=MON`
+- `VITE_CONTRACT_ADDRESS=<deployed contract>`
+- `VITE_DEMO_MODE=false`
+
+## Demo Script (2 minutes)
+
+1. Open web page.
+2. Login (`MetaMask Login` or `Demo Wallet Login` in demo mode).
+3. Click map and submit a hazard from modal.
+4. Use `Hazard Feed` table to upvote/downvote directly from row actions.
+5. Close a hazard as reporter after vote threshold is reached.
+6. Adjust filters (`category`, `risk`, `time`, `includeClosed`, `sort`) and show map + table changes.
+7. Open `Recent Activity` panel and show live events.
+8. Show session countdown and logout flow.
+
+## Useful Commands
+
+- `npm run demo:up` start backend services
+- `npm run demo:down` stop backend services
+- `npm run reset:demo` truncate demo tables
+- `npm run seed:demo` generate demo hazards/votes
+- `npm run verify:demo` validate seeded counts
+- `npm run health:demo` print service + API + DB health report
+- `npm run migrate` run SQL migrations manually
+- `npm run lint`
+- `npm run build`
+- `npm run test`
+- `npm run playwright:install` install Chromium for Playwright
+- `npm run test:smoke` run UI smoke test (login + report flow)
+
+## API Auth Flow
+
+Protected routes require:
+
+1. `GET /api/auth/nonce?address=0x...`
+2. Sign returned message
+3. `POST /api/auth/verify` with `{ address, signature }`
+4. Send:
+   - `Authorization: Bearer <token>`
+   - `x-wallet-address: <same address>`
+
+## Heatmap Filter Query
+
+`GET /api/heatmap` supports:
+
+- `bbox=minLat,minLon,maxLat,maxLon` (required)
+- `category=<int>` (optional)
+- `timeWindow=<hours>` (optional)
+- `minRisk=<0-100>` (optional)
+- `maxRisk=<0-100>` (optional)
+- `includeClosed=<true|false>` (optional)
+
+## Additional API Endpoints
+
+- `GET /api/hazards`
+  - query: `bbox` (required), `category`, `timeWindow`, `minRisk`, `maxRisk`, `includeClosed`, `limit`, `sort=recent|risk|votes`
+  - returns enriched hazard rows with vote totals and risk.
+- `GET /api/stats`
+  - query: same filters as `/api/heatmap`
+  - returns aggregate KPI metrics for dashboard cards.
+- `GET /api/activity?limit=30`
+  - returns recent audit log events.
+- `POST /api/hazards/:id/close` (auth required)
+  - reporter-only close action, requires minimum vote threshold (`HAZARD_CLOSE_MIN_VOTES`, default `10`).
+
+## E2E Smoke
+
+The smoke test lives in `e2e/smoke.spec.ts` and validates:
+
+1. Demo wallet login.
+2. Opening report modal.
+3. Submitting hazard with `Other` category and required detail.
+4. Seeing created status and feed update.
+
+## Notes
+
+- Default map bbox points to Kayseri center.
+- `HEATMAP_GRID_SIZE_E6=900` is ~100m cell size.
+- `ENABLE_ONCHAIN_MUTATIONS=false` is default for safe demo mode.
+- CORS is restricted via `CORS_ORIGINS`.

@@ -1,3 +1,4 @@
+import "../../scripts/load-env";
 import { ethers } from "ethers";
 
 const abi = [
@@ -5,7 +6,8 @@ const abi = [
   "event HazardVoted(uint256 indexed hazardId, address indexed voter, bool up)",
   "event HazardClosed(uint256 indexed hazardId)",
   "function reportHazard(int32 latE6, int32 lonE6, uint8 category, uint8 severity, string noteURI)",
-  "function voteHazard(uint256 hazardId, bool up)"
+  "function voteHazard(uint256 hazardId, bool up)",
+  "function closeHazard(uint256 hazardId)"
 ];
 
 
@@ -28,5 +30,11 @@ export async function reportHazardOnChain(latE6: number, lonE6: number, category
 export async function voteHazardOnChain(hazardId: number, up: boolean) {
   const contract = getContract();
   const tx = await contract.voteHazard(hazardId, up);
+  return tx.wait();
+}
+
+export async function closeHazardOnChain(hazardId: number) {
+  const contract = getContract();
+  const tx = await contract.closeHazard(hazardId);
   return tx.wait();
 }

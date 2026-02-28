@@ -146,7 +146,8 @@ deploy_services() {
   fi
 
   warn "Docker yok; fallback olarak API lokal başlatılıyor."
-  npm install
+  npm run setup
+  npm run migrate
   nohup npm run dev:api > /tmp/crowdpulse-api.log 2>&1 &
   sleep 3
   curl -fsS "http://localhost:3001/health" >/dev/null
